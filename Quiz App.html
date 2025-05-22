@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colorful Quiz App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            /* Light mode defaults */
+            --bg-primary: #f5f5f5;
+            --bg-secondary: #ffffff;
+            --text-primary: #212121;
+            --text-secondary: #757575;
+            --accent: #7c4dff;
+            --accent-light: #b388ff;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --correct: #4caf50;
+            --incorrect: #f44336;
+            --quiz-colors: #ff5252, #ffd740, #00bfa5, #7c4dff, #ff4081, #64ffda;
+        }
+
+        /* Dark mode variables */
+        .dark-mode {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #9e9e9e;
+            --accent: #b388ff;
+            --accent-light: #7c4dff;
+            --shadow: rgba(255, 255, 255, 0.05);
+            --correct: #81c784;
+            --incorrect: #e57373;
+            --quiz-colors: #ff8a80, #ffc400, #64ffda, #b388ff, #ff80ab, #a7ffeb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: var(--accent);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .quiz-intro {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .quiz-description {
+            color: var(--text-secondary);
+            margin: 20px 0;
+            line-height: 1.6;
+        }
+
+        .start-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 3px 10px var(--shadow);
+        }
+
+        .start-btn:hover {
+            background-color: var(--accent-light);
+        }
+
+        .quiz-container {
+            display: none;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .question-count {
+            color: var(--text-secondary);
+        }
+
+        .score {
+            background-color: var(--accent);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        .question-container {
+            background-color: var(--bg-secondary);
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 3px 10px var(--shadow);
+            position: relative;
+        }
+
+        .question-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background-color: var(--quiz-color);
+            border-radius: 10px 0 0 10px;
+        }
+
+        .question-text {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .option {
+            background-color: var(--bg-secondary);
+            border: 2px solid var(--text-secondary);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-size: 1rem;
+            color: var(--text-primary);
+        }
+
+        .option:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .option.correct {
+            background-color: var(--correct);
+            border-color: var(--correct);
+            color: white;
+        }
+
+        .option.incorrect {
+            background-color: var(--incorrect);
+            border-color: var(--incorrect);
+            color: white;
+        }
+
+        .option.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .next-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            float: right;
+            box-shadow: 0 3px 10px var(--shadow);
+        }
+
+        .next-btn:hover {
+            background-color: var(--accent-light);
+        }
+
+        .quiz-result {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .result-title {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--accent);
+        }
+
+        .result-score {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+        }
+
+        .restart-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 3px 10px var(--shadow);
+        }
+
+        .restart-btn:hover {
+            background-color: var(--accent-light);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: var(--bg-secondary);
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--accent);
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        @media (max-width: 600px) {
+            .question-text {
+                font-size: 1.1rem;
+            }
+            
+            .option {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Quiz</h1>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="quiz-intro" id="quizIntro">
+            <h2>Test Your Knowledge</h2>
+            <p class="quiz-description">
+                Welcome to the Colorful Quiz! This quiz contains 10 questions on various topics. 
+                You'll have fun answering them with our colorful interface that adapts to your 
+                preferred theme (dark or light mode).
+            </p>
+            <button class="start-btn" id="startBtn">Start Quiz</button>
+        </div>
+
+        <div class="quiz-container" id="quizContainer">
+            <div class="quiz-header">
+                <div class="question-count" id="questionCount">Question 1 of 10</div>
+                <div class="score" id="score">Score: 0</div>
+            </div>
+
+            <div class="progress-container">
+                <div class="progress-bar" id="progressBar"></div>
+            </div>
+
+            <div class="question-container" id="questionContainer">
+                <div class="question-text" id="questionText"></div>
+                <div class="options-container" id="optionsContainer"></div>
+            </div>
+
+            <button class="next-btn" id="nextBtn">Next Question</button>
+        </div>
+
+        <div class="quiz-result" id="quizResult">
+            <h2 class="result-title">Quiz Completed!</h2>
+            <div class="result-score" id="resultScore">You scored 7 out of 10</div>
+            <p class="quiz-description">
+                Thanks for taking the Colorful Quiz! You can restart the quiz to try 
+                for a better score or check out our other quizzes.
+            </p>
+            <button class="restart-btn" id="restartBtn">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // DOM Elements
+            const themeToggle = document.getElementById('themeToggle');
+            const startBtn = document.getElementById('startBtn');
+            const quizIntro = document.getElementById('quizIntro');
+            const quizContainer = document.getElementById('quizContainer');
+            const quizResult = document.getElementById('quizResult');
+            const questionCount = document.getElementById('questionCount');
+            const scoreElement = document.getElementById('score');
+            const questionText = document.getElementById('questionText');
+            const optionsContainer = document.getElementById('optionsContainer');
+            const nextBtn = document.getElementById('nextBtn');
+            const resultScore = document.getElementById('resultScore');
+            const restartBtn = document.getElementById('restartBtn');
+            const progressBar = document.getElementById('progressBar');
+
+            // Quiz Questions
+            const questions = [
+                {
+                    question: "Which planet is known as the Red Planet?",
+                    options: ["Venus", "Mars", "Jupiter", "Saturn"],
+                    answer: 1,
+                    color: 0 // Index of color in quiz-colors array
+                },
+                {
+                    question: "What is the largest mammal in the world?",
+                    options: ["Elephant", "Blue Whale", "Giraffe", "Polar Bear"],
+                    answer: 1,
+                    color: 1
+                },
+                {
+                    question: "Which language is primarily used for web development?",
+                    options: ["Python", "Java", "C++", "JavaScript"],
+                    answer: 3,
+                    color: 2
+                },
+                {
+                    question: "Who painted the Mona Lisa?",
+                    options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Michelangelo"],
+                    answer: 2,
+                    color: 3
+                },
+                {
+                    question: "What is the chemical symbol for gold?",
+                    options: ["Go", "Gd", "Au", "Ag"],
+                    answer: 2,
+                    color: 4
+                },
+                {
+                    question: "Which country is home to the kangaroo?",
+                    options: ["New Zealand", "South Africa", "Australia", "Brazil"],
+                    answer: 2,
+                    color: 5
+                },
+                {
+                    question: "What is the tallest mountain in the world?",
+                    options: ["K2", "Mount Kilimanjaro", "Mount Everest", "Denali"],
+                    answer: 2,
+                    color: 0
+                },
+                {
+                    question: "Which element has the atomic number 1?",
+                    options: ["Helium", "Hydrogen", "Lithium", "Oxygen"],
+                    answer: 1,
+                    color: 1
+                },
+                {
+                    question: "Who wrote 'Romeo and Juliet'?",
+                    options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"],
+                    answer: 1,
+                    color: 2
+                },
+                {
+                    question: "What is the capital of Japan?",
+                    options: ["Beijing", "Seoul", "Tokyo", "Bangkok"],
+                    answer: 2,
+                    color: 3
+                }
+            ];
+
+            // Quiz State
+            let currentQuestionIndex = 0;
+            let score = 0;
+            let quizCompleted = false;
+
+            // Theme Toggle
+            themeToggle.addEventListener('click', toggleTheme);
+            
+            // Check for saved theme preference or use system preference
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
+                document.body.classList.add('dark-mode');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+
+            // Start Quiz
+            startBtn.addEventListener('click', startQuiz);
+            restartBtn.addEventListener('click', restartQuiz);
+
+            // Next Question
+            nextBtn.addEventListener('click', () => {
+                if (currentQuestionIndex < questions.length - 1) {
+                    currentQuestionIndex++;
+                    showQuestion();
+                } else {
+                    showResult();
+                }
+            });
+
+            // Functions
+            function toggleTheme() {
+                document.body.classList.toggle('dark-mode');
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                
+                if (isDarkMode) {
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+                    localStorage.setItem('theme', 'light');
+                }
+            }
+
+            function startQuiz() {
+                quizIntro.style.display = 'none';
+                quizContainer.style.display = 'block';
+                currentQuestionIndex = 0;
+                score = 0;
+                quizCompleted = false;
+                updateScore();
+                showQuestion();
+            }
+
+            function restartQuiz() {
+                quizResult.style.display = 'none';
+                quizContainer.style.display = 'block';
+                currentQuestionIndex = 0;
+                score = 0;
+                quizCompleted = false;
+                updateScore();
+                showQuestion();
+            }
+
+            function showQuestion() {
+                resetState();
+                const currentQuestion = questions[currentQuestionIndex];
+                const questionNo = currentQuestionIndex + 1;
+                questionCount.textContent = `Question ${questionNo} of ${questions.length}`;
+                
+                // Update progress bar
+                const progressPercent = (questionNo / questions.length) * 100;
+                progressBar.style.width = `${progressPercent}%`;
+                
+                // Set question color
+                const rootStyles = getComputedStyle(document.documentElement);
+                const quizColors = rootStyles.getPropertyValue('--quiz-colors').split(', ');
+                const questionColor = quizColors[currentQuestion.color];
+                document.documentElement.style.setProperty('--quiz-color', questionColor);
+                
+                questionText.textContent = currentQuestion.question;
+                
+                currentQuestion.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.classList.add('option');
+                    button.dataset.index = index;
+                    button.addEventListener('click', selectOption);
+                    optionsContainer.appendChild(button);
+                });
+                
+                nextBtn.style.display = 'none';
+            }
+
+            function resetState() {
+                while (optionsContainer.firstChild) {
+                    optionsContainer.removeChild(optionsContainer.firstChild);
+                }
+            }
+
+            function selectOption(e) {
+                const selectedButton = e.target;
+                const selectedIndex = parseInt(selectedButton.dataset.index);
+                const correctIndex = questions[currentQuestionIndex].answer;
+                const isCorrect = selectedIndex === correctIndex;
+                
+                if (isCorrect) {
+                    selectedButton.classList.add('correct');
+                    score++;
+                    updateScore();
+                } else {
+                    selectedButton.classList.add('incorrect');
+                    // Highlight correct answer
+                    optionsContainer.children[correctIndex].classList.add('correct');
+                }
+                
+                // Disable all options after selection
+                Array.from(optionsContainer.children).forEach(button => {
+                    button.classList.add('disabled');
+                });
+                
+                nextBtn.style.display = 'block';
+            }
+
+            function updateScore() {
+                scoreElement.textContent = `Score: ${score}`;
+            }
+
+            function showResult() {
+                quizContainer.style.display = 'none';
+                quizResult.style.display = 'block';
+                resultScore.textContent = `You scored ${score} out of ${questions.length}`;
+            }
+        });
+    </script>
+</body>
+</html>
